@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="ISO-8859-15">
+    <link rel="stylesheet" href="jquery.mobile-1.4.5.min.css">
+    <script src="jquery-2.1.1.min.js"></script>
+    <script src="jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript">
+		var viewport = {
+			width  : $(window).width(),
+			height : $(window).height()
+		};
+		$.urlParam = function(name){
+			var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
+			return results[1] || 0;
+		}
+		$.localizedText = function(text, lng) {
+			var locArr = text.split("<"+lng+">");
+			return locArr[1];
+		}
+		$.setBackground = function(fPath, imgName) {
+			$("style").html("<style type='text/css'>"
+			            + "@font-face { "
+                        +    "font-family: MyFont;"
+                        +    "src: url(\"../fonts/HelveticaNeue.ttf\")"
+                        + "}"
+                        + "body {"
+                        +    "font-family: MyFont;"
+                        +    "font-size: medium;"
+                        +    "text-align: justify;"
+                        + "}"
+						+ ".ui-page {"
+						+ "background: url('" + fPath + imgName +".png');"
+						+ "background-repeat:no-repeat;"
+						+ "background-position:center center;"
+						+ "background-size:cover; }"
+						+ ".ui-body-c, .ui-overlay-c { text-shadow:0 0 0; }</style>");
+		}
+
+		$.setPageTitle = function(title, lng) {
+			$("#title").append('<h1>'+ $.localizedText(title, lng)+'</h1>');
+			$("#title").css("text-align", "center");
+		}
+
+		$.setFAQContent = function(tableItems, lng) {
+			for(var a=0; a<tableItems.length;a++) {
+				var counter=0;
+				while(a != tableItems[counter].orderIndex)
+					counter++;
+				$("#faq").append('<div data-role="collapsible" data-theme="b" data-content-theme="b">' +
+						  '<h4>' + $.localizedText(tableItems[counter].question,lng) + '</h4>' +
+						  '<p>' + $.localizedText(tableItems[counter].answer,lng) + '</p></div>');
+			}
+			$('div[data-role=collapsible]').collapsible({refresh:true});
+		}
+
+		$.setAboutContent = function(about, lng) {
+			$("#about").append('<p>'+ $.localizedText(about,lng) +'</p>');
+		}
+
+		$.setDescription = function(desc, lng) {
+			var descTitle;
+			if(lng == 'TR')
+				descTitle = "AÇIKLAMA";
+			else
+				descTitle = "DESCRIPTION";
+			$("#description").append('<h3 style="color=gray;">'+ descTitle +'</h3>' +
+									  '<p>'+ $.localizedText(desc,lng) +'</p>');
+		}
+
+		$.setSocialMedia = function(responseText, lng) {
+			if(responseText.hasOwnProperty('facebook') && responseText.facebook != null)
+				$('#social').append('<a href="'+responseText.facebook+'"><img src="facebook.png" width="50" height="50" hspace="5" /></a>');
+			if(responseText.hasOwnProperty('twitter') && responseText.twitter != null)
+				$('#social').append('<a href="'+responseText.twitter+'"><img src="twitter.png" width="50" height="50" hspace="5" /></a>');
+			if(responseText.hasOwnProperty('linkedin') && responseText.linkedin != null)
+				$('#social').append('<a href="'+responseText.linkedin+'"><img src="linkedin.png" width="50" height="50" hspace="5" /></a>');
+			if(responseText.hasOwnProperty('googleplus') && responseText.googleplus != null)
+				$('#social').append('<a href="'+responseText.googleplus+'"><img src="googleplus.png" width="50" height="50" hspace="5" /></a>');
+			if(responseText.hasOwnProperty('email') && responseText.email != null)
+				$('#social').append('<a href="mailto:'+responseText.email+'"><img src="email.png" width="50" height="50" hspace="5" /></a>');
+			if(responseText.hasOwnProperty('website') && responseText.website != null)
+				$('#social').append('<a href="'+responseText.website+'"><img src="web.png" width="50" height="50" hspace="5" /></a>');
+		}
+		var filePath = $.urlParam("filePath");
+		var jsonData = $.urlParam("jsonData");
+		var lang = $.urlParam("lang");
+		var responseText = null;
+		var jqxhr = $.getJSON(filePath + jsonData + ".json", function() { /*console.log( "success" );*/ })
+						  .done(function() {
+							  responseText = jQuery.parseJSON(jqxhr.responseText);
+						  })
+						  .fail(function(jqxhr, textStatus, error ) {
+						  	  //alert("fail : "+textStatus + " and "+ error);
+						  })
+						  .always(function() {
+							  if(responseText.hasOwnProperty('about')) {
+								$.setAboutContent(responseText.about, lang);
+							  }
+							  if(responseText.hasOwnProperty('contentHeader')) {
+								$.setPageTitle(responseText.contentHeader, lang);
+							  }
+							  if(responseText.hasOwnProperty('description')) {
+								$.setDescription(responseText.description, lang);
+							  }
+							  $.setBackground(filePath,responseText.backgroundImageName.name);
+							  if(responseText.hasOwnProperty('tableItems')) {
+								  $.setFAQContent(responseText.tableItems, lang);
+							  }
+							  $.setSocialMedia(responseText, lang);
+						  });
+						jqxhr.complete(function() {
+						});
+
+		    
+    </script>
+</head>
+<style></style>
+<body>
+	<div id="title" data-theme="b"></div>
+	<div id="faq" data-theme="b"></div>
+	<div id="about" class="ui-content" data-theme="b"></div>
+	<div id="description" class="ui-content" data-theme="b"></div>
+	<div id="social" data-theme="b"></div>
+</body>
+</html>

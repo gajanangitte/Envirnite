@@ -1,0 +1,189 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+<link href="weather-css2.css" rel="stylesheet" >
+<link href="../jquery.mobile-1.4.5.min.css" rel="stylesheet" >
+<script src="../jquery-2.1.1.min.js"></script>
+<script src="../jquery.mobile-1.4.5.min.js"></script>
+<script src="jquery.simpleWeather.js"></script>
+<script src="moment.min.js"></script>
+<script src="tr.js"></script>
+<style>
+body {
+	font: 13px 'Open Sans', "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+}
+</style>
+</head>
+<body>
+	<div id="weather"></div>
+</body>
+<script>
+
+// no localization allowed for this api, hard code localization for TR (yahoo values https://developer.yahoo.com/weather/documentation.html#channel)
+function getWeatherValue(sWeather) {
+	if(getUrlParameter("lang") == "TR") {
+		switch(sWeather) {
+			case "Tornado":
+				sWeather = "Hortum Tehlikesi"
+				break;
+			case "Tropical Storm":
+				sWeather = "Tropik Fırtına"
+				break;
+			case "Hurricane":
+				sWeather = "Fırtına"
+				break;
+			case "Thunderstorms":
+				sWeather = "Gök gürültülü ve yağışlı"
+				break;
+			case "Severe Thunderstorms":
+				sWeather = "Şiddetli gök gürültülü ve yağışlı"
+				break;
+			case "Mixed Rain and Snow":
+				sWeather = "Karla karışık yağmurlu"
+				break;
+			case "Showers":
+				sWeather = "Sağanak yağışlı"
+				break;
+			case "Snow":
+				sWeather = "Kar yağışlı"
+				break;
+			case "Snow Showers":
+				sWeather = "Sağanak Kar Yağışlı"
+				break;
+			case "Heavy Snow":
+				sWeather = "Aşırı Kar yağışlı"
+				break;
+			case "Thundershowers":
+				sWeather = "Gök gürültülü sağanak yağışlı"
+				break;
+			case "Foggy":
+				sWeather = "Sisli"
+				break;
+			case "Windy":
+				sWeather = "Rüzgarlı"
+				break;
+			case "Hot":
+				sWeather = "Güneşli"
+				break;
+			case "Cloudy":
+				sWeather = "Bulutlu"
+				break;
+			case "Partly Cloudy":
+				sWeather = "Parçalı Bulutlu"
+				break;
+			case "Sunny":
+				sWeather = "Güneşli"
+				break;
+			case "Fair":
+				sWeather = "Açık"
+				break;
+			case "Light Rain Shower":
+				sWeather = "Hafif Yağışlı"
+				break;
+			case "Mostly Cloudy":
+				sWeather = "Çok Bulutlu"
+				break;
+			case "Rainy":
+				sWeather = "Sağanak Yağışlı"
+				break;
+			case "Light Rain with Thunder":
+				sWeather = "Gök gürültülü ve hafif yağmurlu"
+				break;
+			default:
+				break;
+		}
+	}
+	return sWeather;
+}
+
+// no localization allowed for this api, hard code localization for TR
+function getDayValue(sDay)
+{
+	if(getUrlParameter("lang") == "TR") {
+		switch(sDay) {
+			case "Sun":
+				sDay = "PAZ"
+				break;
+			case "Mon":
+				sDay = "PZT"
+				break;
+			case "Tue":
+				sDay = "SALI"
+				break;
+			case "Wed":
+				sDay = "ÇARŞ"
+				break;
+			case "Thu":
+				sDay = "PERŞ"
+				break;
+			case "Fri":
+				sDay = "CUMA"
+				break;
+			case "Sat":
+				sDay = "CMT"
+				break;
+			default:
+				break;
+		}
+	}
+	return sDay;
+} 
+
+function getUrlParameter(sParam)
+{
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) 
+    {
+        var sParameterName = sURLVariables[i].split('=');
+        if (sParameterName[0] == sParam) 
+        {
+            return sParameterName[1];
+        }
+    }
+}         
+$(document).ready(function() {
+  var lastUpdateText = "Last Update : ";
+  if(getUrlParameter("lang") == "TR") {
+	lastUpdateText = "Son Güncelleme : ";
+	moment.lang('TR');
+  }else {
+	moment.lang('EN');
+  }
+  $.simpleWeather({
+    title: '',
+    location: getUrlParameter('city'),
+    unit: 'c',
+    success: function(weather) {
+	  var arr = weather.updated.split(" ");
+	  var time = weather.updated.replace(arr[arr.length - 1], "");
+	  var timestamp = moment(time);
+	  lastUpdateText += moment(timestamp).fromNow();
+	  if(lastUpdateText.indexOf("sonra") > -1) {
+		lastUpdateText = lastUpdateText.replace("sonra", "önce");
+	  }else if(lastUpdateText.indexOf("later") > -1) {
+		lastUpdateText = lastUpdateText.replace("later", "before");
+	  }
+	  html = '<h1>'+weather.city+'</h1>';
+	  html += '<h2>'+getWeatherValue(weather.currently)+'</h2>';
+      html += '<h3>'+weather.temp+'&deg;C</h3>';
+	  html += '<div class="currently">'+lastUpdateText+'</div>';
+	  //html += '<div class="currently">'+weather.updated+'</div>';
+	  //html += '<div style="width:100%;height:1px;margin:35px auto 5px;background-color:rgba(255, 255, 255, 0.5)"></div>';
+      
+      for(var i=1;i<weather.forecast.length;i++) {
+        html += '<li><p>'+getDayValue(weather.forecast[i].day)+'</p><h5><img src="'+weather.forecast[i].thumbnail+'" height="40"/></h5><span>'+weather.forecast[i].high+'&deg;</span></li>';
+      }
+  
+      $("#weather").html(html);
+    },
+    error: function(error) {
+      $("#weather").html('<p>'+error+'</p>');
+    }
+  });
+});
+</script>
+</html>

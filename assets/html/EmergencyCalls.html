@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="ISO-8859-15">
+    <link rel="stylesheet" href="jquery.mobile-1.4.5.min.css">
+    <script src="jquery-2.1.1.min.js"></script>
+    <script src="jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript">
+		var viewport = {
+			width  : $(window).width(),
+			height : $(window).height()
+		};
+		$.urlParam = function(name){
+			var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
+			return results[1] || 0;
+		}
+		$.localizedText = function(text, lng) {
+			var locArr = text.split("<"+lng+">");
+			return locArr[1];
+		}
+		$.setBackground = function(fPath, imgName, listImgName) {
+			$("style").html("<style type='text/css'>"
+						+ ".ui-page {" 
+						+ "background: url('" + fPath + imgName +".png');"
+						+ "background-repeat:no-repeat;"
+						+ "background-position:center center;"
+						+ "background-size:cover; }" 
+						+ "#call_numbers a {"
+						+ "background: url('" + fPath + listImgName +".png') !important;"
+						+ "background-size: 100%; } </style>");
+		}
+
+		function callNumber(number) {
+			window.open(number);
+		};
+		
+		$.setEmergencyCallContent = function(tableItems, lng) {
+			for(var a=0; a<tableItems.length;a++) {
+				$("#call_numbers").append('<li><a href="tel:'+ tableItems[a].phoneNumber +'" class="ui-btn ui-btn-icon-right ui-icon-phone">'+ $.localizedText(tableItems[a].title,lng) +'</a></li>');
+			}
+			$('ul').listview('refresh');
+		}
+
+		
+		var filePath = $.urlParam("filePath");
+		var jsonData = $.urlParam("jsonData");
+		var lang = $.urlParam("lang");
+		var responseText = null;
+		var jqxhr = $.getJSON(filePath + jsonData + ".json", function() { /*console.log( "success" );*/ })
+						  .done(function() {
+							  responseText = jQuery.parseJSON(jqxhr.responseText);
+						  })
+						  .fail(function(jqxhr, textStatus, error ) {
+						  })
+						  .always(function() {
+							  $.setBackground(filePath,responseText.backgroundImageName.name, responseText.tableCellBackground.name);
+							  if(responseText.hasOwnProperty('tableItems')) {
+								  $.setEmergencyCallContent(responseText.tableItems, lang);
+							  }
+						  });
+						jqxhr.complete(function() {
+						});
+
+		    
+    </script>
+</head>
+<style></style>
+<body>
+	<ul id="call_numbers" data-role="listview"></ul>
+</body>
+</html>
